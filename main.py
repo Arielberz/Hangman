@@ -1,27 +1,50 @@
-from word_provider import fetch_random_word
 from game_state import GameState
-from ui_console import ask_max_wrong, ask_letter, show_state, show_result
+from word_provider import get_word
+from ui_console import show_state, ask_letter, he
 
 def main():
-    max_wrong = ask_max_wrong()
-    word = fetch_random_word()
-    game = GameState(word, max_wrong)
+    word = get_word()
+    # Ask the player how many mistakes they want
+    def prompt_max_errors():
+        while True:
+            s = input(he("כמה טעויות מותרות תרצה? (לחץ Enter לברירת מחדל 4): ")).strip()
+            if s == "":
+                return 4
+            try:
+                n = int(s)
+                if n > 0:
+                    return n
+            except ValueError:
+                pass
+            print(he("קלט לא חוקי - הזן מספר חיובי או לחץ Enter"))
 
-    while not game.is_won() and not game.is_lost():
-        show_state(game.display_text(), game.attempts_text(), sorted(game.guessed))
-        result = game.guess_letter(ask_letter())
+    max_errors = prompt_max_errors()
+    state = GameState(word, max_errors=max_errors)
 
-        if result == "invalid":
-            print("קלט לא חוקי")
-        elif result == "repeat":
-            print("כבר ניחשת")
+    while not state.is_won() and not state.is_lost():
+        show_state(state)
+
+        ch = ask_letter()
+
+        if len(ch) != 1:
+            print(he("קלט לא חוקי"))
+            continue
+
+        result = state.guess(ch)
+
+        if result == "already":
+            print(he("כבר ניחשת את האות הזו"))
         elif result == "hit":
-            print("פגיעה")
+            print(he("פגיעה!"))
         elif result == "miss":
-            print("טעות")
+            print(he("טעות"))
 
-    show_state(game.display_text(), game.attempts_text(), sorted(game.guessed))
-    show_result(game.is_won(), game.secret_word)
+    show_state(state)
+
+    if state.is_won():
+        print(he("🎉 ניצחת!"))
+    else:
+        print(he(f"הפסדת 😢 המילה הייתה: {word}"))
 
 if __name__ == "__main__":
     main()

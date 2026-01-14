@@ -1,42 +1,33 @@
 import re
 
-try:
-    from colorama import Back, init
-    init(autoreset=True)
-    USE_COLOR = True
-except Exception:
-    USE_COLOR = False
-    Back = None
+def he(text):
+    reversed_text = text[::-1]
 
-def he(s: str) -> str:
-    rev = s[::-1]
-    return re.sub(r"[A-Za-z0-9@#%&*/._+\-]+", lambda m: m.group(0)[::-1], rev)
+    def fix(match):
+        return match.group(0)[::-1]
 
-def ask_max_wrong():
-    while True:
-        print(he("כמה טעויות מותר?"))
-        n = input()
-        if n.isdigit() and int(n) > 0:
-            return int(n)
-        print(he("נא להכניס מספר חיובי."))
+    out = re.sub(r"[A-Za-z0-9:/\-.,]+", fix, reversed_text)
+
+    # Fix parentheses direction/side after reversing
+    # swap '(' and ')' so they appear on the correct side for RTL text
+    if "(" in out or ")" in out:
+        out = out.replace('(', '\u0000').replace(')', '(').replace('\u0000', ')')
+
+    return out
+
+
+def show_state(state):
+    print()
+    print(he(f"טעויות: {state.errors}/{state.max_errors}"))
+    print("-" * 30)
+    print(he("ניחוש אות:"))
+    print(he(" ".join(state.display_word)))
+
+    if state.guessed_letters:
+        print(he(f"ניחושים: {', '.join(state.guessed_letters)}"))
+
+    print("-" * 30)
+
 
 def ask_letter():
-    print(he("נחש אות:"))
-    return input()
-
-def show_state(display, attempts, guessed):
-    if USE_COLOR:
-        print(Back.BLUE + display)
-    else:
-        print(display)
-
-    print(he("טעויות:") + " " + attempts)
-    if guessed:
-        print(he("ניחושים:") + " " + ", ".join(guessed))
-    print("-" * 25)
-
-def show_result(won, word):
-    if won:
-        print(he("ניצחת! המילה:") + " " + word)
-    else:
-        print(he("הפסדת. המילה:") + " " + word)
+    return input(he("נחש אות: ")).strip()

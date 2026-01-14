@@ -2,19 +2,21 @@ import random
 import requests
 
 FALLBACK_WORDS = [
-    "python", "hangman", "computer", "programming", "school", "banana", "israel"
+    "תוכנה",
+    "מחשב",
+    "אלגוריתם",
+    "פייתון",
+    "קוד"
 ]
 
-def fetch_random_word(timeout_sec=5.0):
-    url = "https://random-word-api.herokuapp.com/word?number=1"
-    try:
-        r = requests.get(url, timeout=timeout_sec)
-        r.raise_for_status()
-        data = r.json()
-        word = data[0].lower()
-        if word.isalpha():
-            return word
-    except Exception:
-        pass
+URL = "https://raw.githubusercontent.com/oprogramador/wordlists/master/hebrew.txt"
 
-    return random.choice(FALLBACK_WORDS)
+
+def get_word(timeout_sec=5):
+    try:
+        r = requests.get(URL, timeout=timeout_sec)
+        r.raise_for_status()
+        words = [w.strip() for w in r.text.splitlines() if w.strip() and w.isalpha()]
+        return random.choice(words)
+    except Exception:
+        return random.choice(FALLBACK_WORDS)

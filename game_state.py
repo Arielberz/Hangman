@@ -1,49 +1,28 @@
-from dataclasses import dataclass, field
-
-@dataclass
 class GameState:
-    secret_word: str
-    max_wrong: int
+    def __init__(self, word, max_errors=4):
+        self.word = word
+        self.max_errors = max_errors
+        self.errors = 0
+        self.guessed_letters = set()
+        self.display_word = ["_" for _ in word]
 
-    display: list[str] = field(init=False)
-    guessed: set[str] = field(default_factory=set)
-    wrong_attempts: int = 0
+    def guess(self, ch):
+        if ch in self.guessed_letters:
+            return "already"
 
-    def __post_init__(self):
-        self.secret_word = self.secret_word.lower()
-        self.display = ["_"] * len(self.secret_word)
+        self.guessed_letters.add(ch)
 
-    def guess_letter(self, ch):
-        ch = ch.strip().lower()[:1]
-
-        if not ch.isalpha():
-            return "invalid"
-
-        if ch in self.guessed:
-            return "repeat"
-
-        self.guessed.add(ch)
-
-        hit = False
-        for i, c in enumerate(self.secret_word):
-            if c == ch:
-                self.display[i] = ch
-                hit = True
-
-        if hit:
+        if ch in self.word:
+            for i, letter in enumerate(self.word):
+                if letter == ch:
+                    self.display_word[i] = ch
             return "hit"
-
-        self.wrong_attempts += 1
-        return "miss"
+        else:
+            self.errors += 1
+            return "miss"
 
     def is_won(self):
-        return "_" not in self.display
+        return "_" not in self.display_word
 
     def is_lost(self):
-        return self.wrong_attempts >= self.max_wrong
-
-    def display_text(self):
-        return " ".join(self.display)
-
-    def attempts_text(self):
-        return f"{self.wrong_attempts}/{self.max_wrong}"
+        return self.errors >= self.max_errors
